@@ -138,7 +138,7 @@ API 会返回一个 JSON 数组，其中包含找到的匹配项。每个匹配�
 细心的你可能已经发现，项目中部分元素的配色方案有所不同。
 这其实是一个小小的彩蛋，用以致敬我喜爱的作品：
 
-*   <span style="display:inline-block; width:15px; height:15px; background-color:#3388bb; border:1px solid #777; margin-right:5px; vertical-align:middle;"></span> 颜色 `#3388bb` (一种蓝/青色) 代表 **It's MyGO!!!!!**
-*   <span style="display:inline-block; width:15px; height:15px; background-color:#881144; border:1px solid #777; margin-right:5px; vertical-align:middle;"></span> 颜色 `#881144` (一种洋红色) 代表 **Ave Mujica**
+*   <img src="https://placehold.co/15x15/3388bb/3388bb.png" alt="#3388bb" width="15" height="15" style="vertical-align: middle; margin-right: 5px;"> 颜色 `#3388bb` (一种蓝/青色) 代表 **It's MyGO!!!!!**
+*   <img src="https://placehold.co/15x15/881144/881144.png" alt="#881144" width="15" height="15" style="vertical-align: middle; margin-right: 5px;"> 颜色 `#881144` (一种洋红色) 代表 **Ave Mujica**
 
 希望这个小细节能给你带来一丝乐趣！ 
