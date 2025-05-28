@@ -138,7 +138,7 @@ API 会返回一个 JSON 数组，其中包含找到的匹配项。每个匹配�
 细心的你可能已经发现，项目中部分元素的配色方案有所不同。
 这其实是一个小小的彩蛋，用以致敬我喜爱的作品：
 
-*   <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNSIgaGVpZ2h0PSIxNSI+PHJlY3Qgd2lkdGg9IjE1IiBoZWlnaHQ9IjE1IiBmaWxsPSIjMzM4OGJiIiAvPjwvc3ZnPg==" alt="Blue" width="15" height="15" style="vertical-align:middle;"> 颜色 `#3388bb` (一种蓝/青色) 代表 **It's MyGO!!!!!**
-*   <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNSIgaGVpZGh0PSIxNSI+PHJlY3Qgd2lkdGg9IjE1IiBoZWlnaHQ9IjE1IiBmaWxsPSIjODgxMTQ0IiAvPjwvc3ZnPg==" alt="Purple" width="15" height="15" style="vertical-align:middle;"> 颜色 `#881144` (一种洋红色) 代表 **Ave Mujica**
+*   <span style="display:inline-block; width:15px; height:15px; background-color:#3388bb; border:1px solid #777; margin-right:5px; vertical-align:middle;"></span> 颜色 `#3388bb` (一种蓝/青色) 代表 **It's MyGO!!!!!**
+*   <span style="display:inline-block; width:15px; height:15px; background-color:#881144; border:1px solid #777; margin-right:5px; vertical-align:middle;"></span> 颜色 `#881144` (一种洋红色) 代表 **Ave Mujica**
 
 希望这个小细节能给你带来一丝乐趣！ 
