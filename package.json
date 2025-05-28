@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "express": "^5.1.0",
+    "playwright": "^1.52.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

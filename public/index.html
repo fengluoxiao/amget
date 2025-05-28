@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apple Music 信息获取</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- <link rel="stylesheet" href="style.css"> -->
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"; margin: 0; background-color: #f0f2f5; color: #1d1d1f; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; padding-top: 20px; }
+        #app { width: 100%; max-width: 500px; margin: 0 auto; padding: 25px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1 { font-size: 1.8em; color: #1d1d1f; text-align: center; margin-bottom: 25px; }
+        h4 { font-size: 1.0em; color: #3388bb; text-align: center; margin-bottom: 25px; }
+        
+        input[type="radio"] {
+            accent-color: #3388bb;
+        }
+
+        .search-container { margin-bottom: 25px; display: flex; gap: 10px; }
+        .search-container input[type="text"] { flex-grow: 1; padding: 12px 15px; border: 1px solid #d2d2d7; border-radius: 8px; font-size: 1em; transition: border-color 0.2s; }
+        .search-container input[type="text"]:focus { border-color: #3388bb; outline: none; box-shadow: 0 0 0 3px rgba(51,136,187,0.1); }
+        .search-container button { padding: 12px 18px; background-color: #3388bb; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; font-weight: 500; transition: background-color 0.2s; }
+        .search-container button:hover { background-color: #266699; }
+        .search-container button:disabled { background-color: #c7c7cc; cursor: not-allowed; }
+        
+        .message-box { margin-top: 20px; padding: 12px 15px; border-radius: 8px; font-size: 0.95em; }
+        .loading { background-color: #d6e6f1; color: #205070; border: 1px solid #a4c6e0;}
+        .error { background-color: #F5E7ED; color: #881144; border: 1px solid #E1B8C8; }
+        .no-results { background-color: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+
+        .result-card { 
+            margin-top: 25px; 
+            padding: 20px; 
+            border: 1px solid #e5e5e5; 
+            border-radius: 10px; 
+            background-color: #f9f9f9; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+            position: relative; /* 确保相对定位上下文 */
+        }
+        .result-header { display: flex; align-items: center; gap: 15px; }
+        .result-artwork img { width: 100px; height: 100px; border-radius: 6px; object-fit: cover; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .result-info { flex-grow: 1; }
+        .result-info h3 { margin: 0 0 5px 0; font-size: 1.4em; color: #1d1d1f; }
+        .result-info p { margin: 3px 0; font-size: 0.9em; color: #58585b; }
+        .result-info p strong { color: #333; }
+        
+        .result-details { border-top: 1px dashed #e0e0e0; padding-top: 15px; }
+        .result-details p { margin: 6px 0; font-size: 0.9em; }
+        .audio-trait { display: inline-block; padding: 3px 8px; margin-right: 5px; margin-bottom: 5px; font-size: 0.8em; border-radius: 4px; background-color: #e9e9eb; color: #333; }
+        .dolby-yes { background-color: #d6e6f1 !important; color: #205070 !important; font-weight: bold; }
+        .dolby-no { background-color: #f2d9e6 !important; color: #660033 !important; }
+
+        /* Song Theme for Audio Traits (based on #3388bb) */
+        .audio-trait-song-theme { background-color: #e6f0f7; color: #205070; }
+        .dolby-yes-song-theme { background-color: #d6e6f1; color: #205070; font-weight: bold; }
+        .dolby-no-song-theme { background-color: #f2d9e6; color: #660033; }
+
+        /* Album Theme for Audio Traits (based on #881144) */
+        .audio-trait-album-theme { background-color: #f5e7ed; color: #660033; }
+        .dolby-yes-album-theme { background-color: #efd1df; color: #660033; font-weight: bold; }
+        /* .dolby-no-album-theme is effectively the same as current .dolby-no, so we can reuse or ensure consistency */
+        .dolby-no-album-theme { background-color: #e6f0f7; color: #205070; }
+
+        .item-type-badge {
+            position: absolute;
+            top: 12px; /* 调整了边距 */
+            right: 12px; /* 调整了边距 */
+            padding: 4px 8px; /* 调整了内边距 */
+            border-radius: 4px; /* 调整了圆角 */
+            font-size: 0.75em; /* 调整了字体大小 */
+            color: white;
+            font-weight: bold;
+            z-index: 2; /* 确保在其他内容之上 */
+        }
+
+        .badge-song { background-color: #3388bb; } /* 歌曲用绿色 */
+        .badge-album { background-color: #881144; } /* 专辑用蓝色 */
+
+        @media (max-width: 600px) {
+            body { padding-top: 10px; }
+            #app { margin: 10px; padding: 20px; }
+            h1 { font-size: 1.6em; }
+            .result-header { flex-direction: column; align-items: flex-start; }
+            .result-artwork img { width: 80px; height: 80px; margin-bottom: 10px; }
+            .result-info h3 { font-size: 1.3em; }
+        }
+
+        .album-tracks-container { margin: 15px 0; border-top: 1px solid #eee; padding-top: 15px; border-bottom: 1px solid #eee;}
+        .toggle-tracks-btn-song { 
+            background-color: #3388bb; 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 0.9em; 
+            margin-bottom: 10px; 
+            display: block; /* 让按钮占据一行 */
+            width: 100%; /* 宽度100% */
+            text-align: left;
+        }
+        .toggle-tracks-btn-song:hover { background-color: #266699; }
+        .toggle-tracks-btn-album { 
+            background-color: #881144; 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 0.9em; 
+            margin-bottom: 10px; 
+            display: block; /* 让按钮占据一行 */
+            width: 100%; /* 宽度100% */
+            text-align: left;
+        }
+        .toggle-tracks-btn-album:hover { background-color: #660033; }
+        .album-tracks-list { list-style-type: none; padding-left: 0; margin-top: 0; }
+        .track-item { 
+            padding: 10px 5px; 
+            border-bottom: 1px solid #f0f0f0; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+        }
+        .track-item:last-child { border-bottom: none; }
+        .track-info { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; /* 歌曲名、时长等之间的间隙 */ }
+        .track-number { font-weight: bold; min-width: 20px; }
+        .track-name { flex-grow: 1; font-weight: 500; }
+        .track-artist-diff { font-size: 0.85em; color: #555; font-style: italic;}
+        .track-duration { font-size: 0.9em; color: #777; }
+        .track-audio-details { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.85em; padding-left: 20px; /* 与序号对齐一些 */ }
+        .track-dolby-support { padding: 2px 6px; border-radius: 3px; font-weight: bold;}
+        .track-audio-traits .audio-trait { margin-right: 4px; margin-bottom: 2px; font-size: 0.9em; /* 调整特性标签大小 */ }
+        .track-release-date-diff { font-size: 0.85em; color: #555; font-style: italic; margin-left: auto; /* 尝试让发行日期靠右一些 */} 
+        .track-credits-details { 
+            /* font-size: 0.8em; */ /* 移除或注释掉此行，使其继承父级字体大小 */
+            color: #333; /* 与外部 p 标签颜色一致 */
+            padding-left: 20px; 
+
+            flex-wrap: wrap; 
+            gap: 10px; 
+        }
+        .track-credits-details p {
+            margin: 3px 0; /* 与外部 p 标签的上下间距一致 (或根据视觉调整) */
+            font-size: 0.9em; /* 与外部 p 标签字体大小一致 */
+            flex-shrink: 0; 
+        }
+        .track-credits-details p strong {
+            color: #333; /* 确保 strong 标签颜色 */
+        }
+
+        .track-credits-details .songwriter-trait {
+            /* background-color: #f0f0f0; */ /* 移除特定背景，使其更像 audio-trait */
+            /* border: 1px solid #ddd; */   /* 移除特定边框 */
+            /* color: #333; */             /* 颜色由 .audio-trait 控制 */
+            /* font-size: 0.95em; */
+            /* 与 .audio-trait 保持一致的样式，这里可以省略，因为它已经有 .audio-trait 类 */
+            /* 如果需要微调，例如仅改变背景色，则可以保留并修改 background-color */
+             background-color: #e0e0e0; /* 例如给一个稍不同的灰色背景 */
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Apple Music 信息查询</h1>
+        <h4>杜比全景声/空间音频查询</h4>
+        
+        <div class="search-container">
+            <input type="text" v-model="searchTerm" @keyup.enter="search" placeholder="输入歌曲或专辑名称...">
+            <button @click="search" :disabled="loading">
+                {{ loading ? '搜索中...' : '搜索' }}
+            </button>
+        </div>
+
+        <div style="margin-bottom: 15px; text-align: center;">
+            <label style="margin-right: 10px;">
+                <input type="radio" v-model="searchType" value="song" name="searchTypeOption"> 歌曲
+            </label>
+            <label>
+                <input type="radio" v-model="searchType" value="album" name="searchTypeOption"> 专辑
+            </label>
+        </div>
+
+        <div v-if="searchType === 'album'" style="margin-bottom: 20px; text-align: center; font-size: 0.9em; padding: 10px; background-color: #f8f8f8; border-radius: 6px;">
+            <strong style="display: block; margin-bottom: 8px; color: #333;">专辑结果筛选:</strong>
+            <label style="margin-right: 15px;">
+                <input type="radio" v-model="albumFilterType" value="albumPriority" name="albumFilterOption"> 按专辑显示 (需专辑支持杜比)
+            </label>
+            <label>
+                <input type="radio" v-model="albumFilterType" value="songPriority" name="albumFilterOption"> 仅显杜比歌曲 (专辑内筛选)
+            </label>
+        </div>
+
+        <div v-if="loading" class="message-box loading">
+            请稍候，正在努力查询...
+        </div>
+
+        <div v-if="error" class="message-box error">
+            <strong>错误:</strong> {{ error }}
+        </div>
+        
+        <!-- Display this message if there are no results AND no error -->
+        <div v-if="hasSearchedOnce && !loading && !error && resultsList && resultsList.length === 0" class="message-box no-results">
+            {{ noResultsMessage || '未能找到相关信息。请尝试其他搜索词。' }}
+        </div>
+
+        <!-- Loop through resultsList and display a card for each result -->
+        <div v-if="resultsList && resultsList.length > 0">
+            <div v-for="item in resultsList" :key="item.id" class="result-card">
+                <div class="item-type-badge" :class="item.type === 'song' ? 'badge-song' : 'badge-album'">
+                    {{ item.type === 'song' ? '歌曲' : '专辑' }}
+                </div>
+                <div class="result-header">
+                    <div v-if="item.artworkUrl" class="result-artwork">
+                        <img :src="item.artworkUrl" :alt="item.name + ' artwork'">
+                    </div>
+                    <div class="result-info">
+                        <h3>{{ item.name }}</h3>
+                        <p><strong>艺人:</strong> {{ item.artistName }}</p>
+                        <p v-if="item.type === 'song' && item.albumName"><strong>专辑:</strong> {{ item.albumName }}</p>
+                        <p v-if="item.type === 'song' && item.albumId"><strong>专辑ID:</strong> {{ item.albumId }}</p>
+                    </div>
+                </div>
+                
+                <div class="result-details">
+                    <p><strong>ID:</strong> {{ item.id }}</p>
+                    <p><strong>发行日期:</strong> {{ item.releaseDate }}</p>
+                    <p v-if="item.type === 'song' && item.durationInMillis">
+                        <strong>时长:</strong> {{ formatDuration(item.durationInMillis) }}
+                    </p>
+                    <p v-if="item.type === 'album' && item.trackCount">
+                        <strong>曲目数:</strong> {{ item.trackCount }}
+                    </p>
+                    <p v-if="item.type === 'album' && item.upc">
+                        <strong>UPC:</strong> {{ item.upc }}
+                    </p>
+                    <p v-if="item.genres && item.genres.length > 0">
+                        <strong>流派:</strong> <span v-for="genre in item.genres" :key="genre" class="audio-trait">{{ genre }}</span>
+                    </p>
+
+                    <!-- 专辑内歌曲列表的展开/折叠按钮和内容 -->
+                    <div v-if="item.type === 'album' && item.tracksDetails && item.tracksDetails.length > 0" class="album-tracks-container">
+                        <button @click="toggleTracks(item)" :class="item.type === 'song' ? 'toggle-tracks-btn-song' : 'toggle-tracks-btn-album'">
+                            {{ item.showTracksDetails ? '隐藏曲目列表' : '显示曲目列表' }} ({{ item.tracksDetails.length }} 首)
+                        </button>
+                        <ul v-if="item.showTracksDetails" class="album-tracks-list">
+                            <li v-for="(track, index) in item.tracksDetails" :key="track.id" class="track-item">
+                                <div class="track-info">
+                                    <span class="track-number">{{ index + 1 }}.</span>
+                                    <span class="track-name">{{ track.name }}</span>
+                                    <span v-if="track.artistName && track.artistName !== item.artistName" class="track-artist-diff"> (艺人: {{ track.artistName }})</span>
+                                </div>
+                                <!-- 新增：显示专辑内单曲的幕后信息 -->
+                                <div class="track-credits-details" v-if="track.isrc || track.composerName || track.producerName || (track.songwriterNames && track.songwriterNames.length > 0) || (track.audioTraitsTrack && track.audioTraitsTrack.length > 0)">
+                                    <p v-if="track.id"><strong>ID:</strong> {{ track.id }}</p>
+                                    <p v-if="track.releaseDate && track.releaseDate !== item.releaseDate">
+                                        <strong>发行日期:</strong> {{ track.releaseDate }}
+                                    </p>
+                                    <p v-if="track.durationInMillis">
+                                        <strong>时长:</strong> {{ formatDuration(track.durationInMillis) }}
+                                    </p>
+                                    <p v-if="track.genres && track.genres.length > 0">
+                                        <strong>流派:</strong> <span v-for="genre in track.genres" :key="genre" class="audio-trait">{{ genre }}</span>
+                                    </p>
+                                    <p v-if="track.isrc"><strong>ISRC:</strong> {{ track.isrc }}</p>
+                                    <p v-if="track.composerName"><strong>作曲家:</strong> {{ track.composerName }}</p>
+                                    <p v-if="track.producerName"><strong>制作人:</strong> {{ track.producerName }}</p>
+                                    <p v-if="track.songwriterNames && track.songwriterNames.length > 0">
+                                        <strong>词曲作者:</strong> 
+                                        <span v-for="(writer, s_index) in track.songwriterNames" :key="s_index" class="audio-trait songwriter-trait">
+                                            {{ writer }}
+                                        </span>
+                                    </p>
+                                    <p v-if="track.audioTraitsTrack && track.audioTraitsTrack.length > 0" class="track-audio-traits">
+                                        <strong>特性: </strong>
+                                        <span v-for="trait in track.audioTraitsTrack" :key="trait" 
+                                              class="audio-trait" 
+                                              :class="{
+                                                'audio-trait-song-theme': item.type === 'song', /* Assuming parent item's type dictates track badge theme */
+                                                'audio-trait-album-theme': item.type === 'album',
+                                                'dolby-yes-song-theme': (trait.toLowerCase().includes('atmos') || trait.toLowerCase().includes('spatial')) && item.type === 'song',
+                                                'dolby-yes-album-theme': (trait.toLowerCase().includes('atmos') || trait.toLowerCase().includes('spatial')) && item.type === 'album'
+                                              }">
+                                            {{ trait }}
+                                        </span>
+                                    </p>
+                                    <p>
+                                        <strong>杜比全景声/空间音频:</strong> 
+                                        <span v-if="track.supportsDolbyAtmos" 
+                                              class="audio-trait"
+                                              :class="item.type === 'song' ? 'dolby-yes-song-theme' : 'dolby-yes-album-theme'"><strong>支持</strong></span>
+                                        <span v-else 
+                                              class="audio-trait"
+                                              :class="item.type === 'song' ? 'dolby-no-song-theme' : 'dolby-no-album-theme'"><strong>不支持或未明确</strong></span>
+                                    </p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <!-- 专辑内歌曲列表结束 -->
+
+                    <!-- 新增的幕后信息展示 (主要针对单曲) -->
+                    <p v-if="item.type === 'song' && item.isrc">
+                        <strong>ISRC:</strong> {{ item.isrc }}
+                    </p>
+                    <p v-if="item.type === 'song' && item.composerName">
+                        <strong>作曲家:</strong> {{ item.composerName }}
+                    </p>
+                    <p v-if="item.type === 'song' && item.producerName">
+                        <strong>制作人:</strong> {{ item.producerName }}
+                    </p>
+                    <p v-if="item.type === 'song' && item.songwriterNames && item.songwriterNames.length > 0">
+                        <strong>词曲作者:</strong> 
+                        <span v-for="(writer, index) in item.songwriterNames" :key="index" class="audio-trait">
+                            {{ writer }}
+                        </span>
+                    </p>
+                    <!-- 幕后信息结束 -->
+
+                    <p><strong>{{item.type === 'song' ? '音频特性:' : '专辑特性:'}}</strong> 
+                        <span v-if="item.audioTraits && item.audioTraits.length > 0">
+                            <span v-for="trait in item.audioTraits" :key="trait" class="audio-trait" 
+                                  :class="{
+                                      'audio-trait-song-theme': item.type === 'song',
+                                      'audio-trait-album-theme': item.type === 'album',
+                                      'dolby-yes-song-theme': (trait.toLowerCase().includes('atmos') || trait.toLowerCase().includes('spatial')) && item.type === 'song',
+                                      'dolby-yes-album-theme': (trait.toLowerCase().includes('atmos') || trait.toLowerCase().includes('spatial')) && item.type === 'album'
+                                  }">
+                                {{ trait }}
+                            </span>
+                        </span>
+                        <span v-else>无</span>
+                    </p>
+                    <p v-if="item.type === 'song'">
+                        <strong>杜比全景声/空间音频:</strong> 
+                        <span v-if="item.supportsDolbyAtmos" class="audio-trait dolby-yes-song-theme">支持</span>
+                        <span v-else class="audio-trait dolby-no-song-theme">不支持或未明确</span>
+                    </p>
+                    <p v-if="item.type === 'album'">
+                        <strong>杜比全景声/空间音频:</strong> 
+                        <span v-if="item.supportsDolbyAtmos" class="audio-trait dolby-yes-album-theme">支持</span>
+                        <span v-else class="audio-trait dolby-no-album-theme">不支持或未明确</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed } = Vue;
+
+        createApp({
+            setup() {
+                const searchTerm = ref('');
+                const searchType = ref('song');
+                const albumFilterType = ref('albumPriority'); // Default filter for album search
+                const resultsList = ref([]); 
+                const loading = ref(false);
+                const error = ref(null);
+                const noResultsMessage = ref('');
+                const hasSearchedOnce = ref(false); // Added hasSearchedOnce
+
+                const formatDuration = (millis) => {
+                    if (!millis) return '';
+                    let seconds = Math.floor(millis / 1000);
+                    let minutes = Math.floor(seconds / 60);
+                    seconds = seconds % 60;
+                    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                };
+
+                const search = async () => {
+                    if (!searchTerm.value.trim()) {
+                        error.value = '请输入搜索词。';
+                        resultsList.value = []; // Clear previous results
+                        noResultsMessage.value = '';
+                        return;
+                    }
+                    loading.value = true;
+                    error.value = null;
+                    resultsList.value = []; // Clear previous results
+                    noResultsMessage.value = '';
+                    hasSearchedOnce.value = true; // Set hasSearchedOnce to true
+
+                    try {
+                        let apiUrl = `/api/search?term=${encodeURIComponent(searchTerm.value.trim())}&type=${searchType.value}`;
+                        if (searchType.value === 'album') {
+                            apiUrl += `&albumFilter=${albumFilterType.value}`;
+                        }
+                        const response = await fetch(apiUrl);
+                        const data = await response.json(); // Expecting { results: [...] } or { error: "..." }
+                        
+                        if (!response.ok) {
+                            throw new Error(data.error || response.statusText || `请求失败，状态码: ${response.status}`);
+                        }
+                        
+                        if (data.error) { // Handle error case from server
+                             error.value = data.error;
+                             resultsList.value = [];
+                        } else if (data.results && data.results.length > 0) {
+                            // 为专辑项目添加 showTracksDetails 属性
+                            resultsList.value = data.results.map(item => {
+                                if (item.type === 'album') {
+                                    return { ...item, showTracksDetails: false };
+                                }
+                                return item;
+                            });
+                        } else {
+                            // No error, but no results either
+                            resultsList.value = [];
+                            noResultsMessage.value = '未能找到相关信息或符合条件的结果。请尝试其他搜索词。';
+                        }
+
+                    } catch (err) {
+                        console.error('搜索时发生错误:', err);
+                        error.value = err.message || '发生未知错误，请检查服务器控制台。';
+                        resultsList.value = [];
+                    } finally {
+                        loading.value = false;
+                    }
+                };
+
+                return {
+                    searchTerm,
+                    searchType,
+                    albumFilterType,
+                    resultsList,
+                    loading,
+                    error,
+                    noResultsMessage,
+                    hasSearchedOnce, // Expose hasSearchedOnce
+                    search,
+                    formatDuration,
+                    toggleTracks: (item) => { // 新增方法用于切换专辑曲目列表的显示
+                        if (item.type === 'album') {
+                            item.showTracksDetails = !item.showTracksDetails;
+                        }
+                    }
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
