@@ -30,6 +30,7 @@ async function startPlaywrightBrowser() {
     try {
         globalBrowser = await playwright.chromium.launch({
             // headless: false, //调试时可以取消注释
+            channel: 'msedge', // 使用系统安装的 Microsoft Edge，无需下载 Chromium
         });
         const context = await globalBrowser.newContext({
             userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -76,6 +77,7 @@ app.get('/api/search', async (req, res) => {
     const actualSearchType = searchTypeFromQuery || 'song'; // Default to 'song' if not provided
     const albumFilterFromQuery = req.query.albumFilter; // Read albumFilter
     const actualAlbumFilter = albumFilterFromQuery || 'albumPriority'; // Default if not provided
+    const artistOffset = Math.max(0, parseInt(req.query.offset, 10) || 0); // 艺人搜索分页偏移
 
     if (!searchTerm) {
         return res.status(400).json({ error: '搜索词不能为空' });
@@ -101,8 +103,22 @@ app.get('/api/search', async (req, res) => {
     }
 
     try {
-        // 将 globalPage, actualSearchType, 和 actualAlbumFilter 传递给 findAppleMusicInfo
-        const resultsArray = await findAppleMusicInfo(globalPage, searchTerm, storefront, actualSearchType, actualAlbumFilter);
+        // 将 globalPage, actualSearchType, actualAlbumFilter 和 artistOffset 传递给 findAppleMusicInfo
+        const resultPayload = await findAppleMusicInfo(globalPage, searchTerm, storefront, actualSearchType, actualAlbumFilter, artistOffset);
+
+        // 艺人搜索返回 { results, pagination } 或 { error, status } 对象
+        if (!Array.isArray(resultPayload)) {
+            if (resultPayload && resultPayload.error) {
+                console.error("getinfo.js 返回错误:", resultPayload.error);
+                return res.status(resultPayload.status || 500).json({ error: resultPayload.error });
+            }
+            const pagedResults = resultPayload?.results || [];
+            const pagination = resultPayload?.pagination || null;
+            console.log(`服务器准备发送 ${pagedResults.length} 个成功结果（分页: ${JSON.stringify(pagination)}）。`);
+            return res.json({ results: pagedResults, pagination });
+        }
+
+        const resultsArray = resultPayload;
         
         // --- 增加详细日志 ---
         console.log("getinfo.js 返回的原始值 (resultsArray):", resultsArray);

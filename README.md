@@ -138,7 +138,9 @@ API 会返回一个 JSON 数组，其中包含找到的匹配项。每个匹配�
 细心的你可能已经发现，项目中部分元素的配色方案有所不同。
 这其实是一个小小的彩蛋，用以致敬我喜爱的作品（乐队）：
 
-*   <img src="https://placehold.co/15x15/3388bb/3388bb.png" alt="#3388bb" width="15" height="15" style="vertical-align: middle; margin-right: 5px;"> 颜色 `#3388bb` (一种蓝/青色) 代表 **It's MyGO!!!!!**
-*   <img src="https://placehold.co/15x15/881144/881144.png" alt="#881144" width="15" height="15" style="vertical-align: middle; margin-right: 5px;"> 颜色 `#881144` (一种洋红色) 代表 **Ave Mujica**
+*   <img src="https://placehold.co/15x15/3388bb/3388bb.png" alt="#3388bb" width="15" height="15" style="vertical-align: middle; margin-right: 5px;"> 颜色 `#3388bb` (一种蓝/青色) 代表 **It's MyGO!!!!!**，也是「歌曲搜索」的主题色
+*   <img src="https://placehold.co/15x15/881144/881144.png" alt="#881144" width="15" height="15" style="vertical-align: middle; margin-right: 5px;"> 颜色 `#881144` (一种洋红色) 代表 **Ave Mujica**，也是「专辑搜索」的主题色
+*   <img src="https://placehold.co/15x15/FF7788/FF7788.png" alt="#FF7788" width="15" height="15" style="vertical-align: middle; margin-right: 5px;"> 颜色 `#FF7788` (一种粉色) 代表 **梦限大MewType**，也是「艺人搜索」的主题色
+*   <img src="https://placehold.co/15x15/2288DD/2288DD.png" alt="#2288DD" width="15" height="15" style="vertical-align: middle; margin-right: 5px;"> 颜色 `#2288DD` (一种蓝色) 代表 **梦限大MewType**，也是「合集搜索」的主题色
 
 希望这个小细节能给你带来一丝乐趣！ 
